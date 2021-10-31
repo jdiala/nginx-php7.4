@@ -2,6 +2,8 @@ FROM php:7.4-fpm
 LABEL maintainer="jdiala@keymind.com"
 
 RUN apt-get update && apt-get install -y --fix-missing \
+    sudo \
+    nginx \
     default-mysql-client \
     imagemagick \
     graphviz \
@@ -55,10 +57,15 @@ RUN echo "memory_limit = -1\n" \
 RUN usermod -d $HOME www-data && chown -R www-data:www-data $HOME
 
 RUN useradd --create-home --shell /bin/bash phpuser
+RUN usermod -a -G sudo phpuser
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
 USER phpuser
 
 RUN export PATH="$PATH:vendor/bin"
 
 WORKDIR /app/html
 
+EXPOSE 80 443
 
+ENTRYPOINT sudo nginx -c /etc/nginx/nginx.conf -g 'daemon off;'
